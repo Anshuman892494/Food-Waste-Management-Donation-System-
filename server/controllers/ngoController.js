@@ -75,3 +75,35 @@ exports.getNGOStats = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Schedule delivery for accepted donation
+// @route   PUT /api/ngo/schedule-delivery/:id
+// @access  Private (NGO)
+exports.scheduleDelivery = async (req, res, next) => {
+  try {
+    const { deliveryAddress, deliveryLocation } = req.body;
+    
+    let delivery = await Delivery.findOne({ donationId: req.params.id, ngoId: req.user.id });
+    
+    if (!delivery) {
+      return res.status(404).json({ message: 'Delivery task not found' });
+    }
+
+    delivery.deliveryAddress = deliveryAddress;
+    if (deliveryLocation) {
+      delivery.deliveryLocation = {
+        type: 'Point',
+        coordinates: [deliveryLocation.lng, deliveryLocation.lat]
+      };
+    }
+    delivery.status = 'assigned'; 
+    await delivery.save();
+
+    // Update donation status to scheduled
+    await Donation.findByIdAndUpdate(req.params.id, { status: 'scheduled' });
+
+    res.json({ message: 'Delivery scheduled successfully', delivery });
+  } catch (error) {
+    next(error);
+  }
+};

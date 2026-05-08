@@ -21,6 +21,20 @@ const deliverySchema = new mongoose.Schema({
   deliveryTime: {
     type: Date
   },
+  deliveryAddress: {
+    type: String,
+    required: [true, 'Please add a delivery destination address']
+  },
+  deliveryLocation: {
+    type: {
+      type: String,
+      enum: ['Point']
+    },
+    coordinates: {
+      type: [Number],
+      index: '2dsphere'
+    }
+  },
   status: {
     type: String,
     enum: ['assigned', 'picked-up', 'in-transit', 'delivered'],

@@ -62,3 +62,32 @@ exports.updateDeliveryStatus = async (req, res, next) => {
     next(error);
   }
 };
+// @desc    Get available tasks (not yet picked up)
+// @route   GET /api/volunteer/available
+// @access  Private (Volunteer)
+exports.getAvailableTasks = async (req, res, next) => {
+  try {
+    const tasks = await Delivery.find({ status: 'assigned', volunteerId: { $exists: false } })
+      .populate('donationId')
+      .populate('ngoId', 'name');
+    res.json(tasks);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Accept a delivery task
+// @route   PUT /api/volunteer/accept/:id
+// @access  Private (Volunteer)
+exports.acceptTask = async (req, res, next) => {
+  try {
+    let delivery = await Delivery.findById(req.params.id);
+    if (!delivery) return res.status(404).json({ message: 'Task not found' });
+    
+    delivery.volunteerId = req.user.id;
+    await delivery.save();
+    res.json(delivery);
+  } catch (error) {
+    next(error);
+  }
+};

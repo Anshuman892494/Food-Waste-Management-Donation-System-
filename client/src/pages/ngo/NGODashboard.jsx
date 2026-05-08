@@ -1,14 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
-import { FaMapMarkerAlt, FaHandshake, FaCheckCircle } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaHandshake, FaCheckCircle, FaShippingFast } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import MapComponent from '../../components/MapComponent';
+import ScheduleDistributionModal from '../../components/ScheduleDistributionModal';
 
 const NGODashboard = () => {
   const [nearbyDonations, setNearbyDonations] = useState([]);
   const [history, setHistory] = useState([]);
   const [impact, setImpact] = useState({ accepted: 0, distributed: 0 });
   const [loading, setLoading] = useState(true);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [selectedDonationId, setSelectedDonationId] = useState(null);
 
   const fetchNearby = useCallback(async () => {
     try {
@@ -55,6 +58,11 @@ const NGODashboard = () => {
     } catch (err) {
       toast.error('Failed to accept donation');
     }
+  };
+
+  const openScheduleModal = (id) => {
+    setSelectedDonationId(id);
+    setIsScheduleModalOpen(true);
   };
 
   return (
@@ -125,35 +133,49 @@ const NGODashboard = () => {
               <FaCheckCircle className="text-green-500" /> Redistribution History
             </h2>
             <div className="bg-dark-light rounded-2xl border border-white/5 overflow-hidden">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="bg-white/5 text-gray-400 text-sm uppercase">
-                    <th className="px-6 py-4">Food Item</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4">Accepted At</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {history.map((item) => (
-                    <tr key={item._id} className="hover:bg-white/5 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="font-bold text-white">{item.foodName}</div>
-                        <div className="text-xs text-gray-500">{item.pickupAddress}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`text-[10px] px-2 py-1 rounded-full font-bold uppercase border ${
-                          item.status === 'delivered' ? 'border-green-500/50 text-green-500 bg-green-500/10' : 'border-secondary/50 text-secondary bg-secondary/10'
-                        }`}>
-                          {item.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-gray-400 text-sm">
-                        {new Date(item.acceptedAt).toLocaleDateString()}
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="bg-white/5 text-gray-400 text-sm uppercase">
+                      <th className="px-6 py-4">Food Item</th>
+                      <th className="px-6 py-4">Status</th>
+                      <th className="px-6 py-4">Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {history.map((item) => (
+                      <tr key={item._id} className="hover:bg-white/5 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="font-bold text-white">{item.foodName}</div>
+                          <div className="text-xs text-gray-500">{item.pickupAddress}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`text-[10px] px-2 py-1 rounded-full font-bold uppercase border ${
+                            item.status === 'delivered' ? 'border-green-500/50 text-green-500 bg-green-500/10' : 
+                            item.status === 'scheduled' ? 'border-blue-500/50 text-blue-500 bg-blue-500/10' :
+                            'border-secondary/50 text-secondary bg-secondary/10'
+                          }`}>
+                            {item.status === 'scheduled' ? 'Forwarded to Volunteer' : item.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          {item.status === 'accepted' && (
+                            <button 
+                              onClick={() => openScheduleModal(item._id)}
+                              className="flex items-center gap-2 bg-secondary/10 hover:bg-secondary text-secondary hover:text-white px-4 py-2 rounded-lg text-xs font-bold transition-all border border-secondary/20"
+                            >
+                              <FaShippingFast /> Schedule
+                            </button>
+                          )}
+                          {item.status !== 'accepted' && (
+                            <span className="text-gray-500 text-xs italic">In Progress</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
               {history.length === 0 && (
                 <div className="p-12 text-center text-gray-500">
                   No distribution history yet.
@@ -190,6 +212,16 @@ const NGODashboard = () => {
           </div>
         </div>
       </div>
+
+      <ScheduleDistributionModal 
+        isOpen={isScheduleModalOpen}
+        onClose={() => setIsScheduleModalOpen(false)}
+        donationId={selectedDonationId}
+        onRefresh={() => {
+          fetchHistory();
+          fetchStats();
+        }}
+      />
     </div>
   );
 };
