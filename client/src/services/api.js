@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'https://food-waste-management-backend-65m2.onrender.com/api',
 });
 
 // Add a request interceptor to add the JWT token to headers
