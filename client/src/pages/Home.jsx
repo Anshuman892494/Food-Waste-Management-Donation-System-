@@ -1,8 +1,21 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaUtensils, FaUsers, FaMapMarkedAlt, FaTruck } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
+  const { user } = useAuth();
+
+  const getStartedLink = () => {
+    if (!user) return '/register';
+    return `/${user.role}`;
+  };
+
+  const volunteerLink = () => {
+    if (!user) return '/login';
+    return `/${user.role}`;
+  };
+
   return (
     <div className="relative">
       {/* Hero Section */}
@@ -22,12 +35,14 @@ const Home = () => {
             FoodBridge is a unified platform connecting restaurants, NGOs, and volunteers to eliminate food waste and fight hunger in our communities.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link to="/register" className="bg-primary hover:bg-primary-dark px-8 py-4 rounded-xl text-lg font-bold transition-all shadow-lg shadow-primary/20">
-              Start Donating
+            <Link to={getStartedLink()} className="bg-primary hover:bg-primary-dark px-8 py-4 rounded-xl text-lg font-bold transition-all shadow-lg shadow-primary/20">
+              {user ? 'Go to Dashboard' : 'Start Donating'}
             </Link>
-            <Link to="/login" className="bg-dark-light hover:bg-slate-800 px-8 py-4 rounded-xl text-lg font-bold border border-white/10 transition-all">
-              Join as Volunteer
-            </Link>
+            {!user && (
+              <Link to={volunteerLink()} className="bg-dark-light hover:bg-slate-800 px-8 py-4 rounded-xl text-lg font-bold border border-white/10 transition-all">
+                Join as Volunteer
+              </Link>
+            )}
           </div>
         </div>
       </section>
